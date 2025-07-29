@@ -3,7 +3,7 @@
         "baseUrl": "./src",
         "paths": {
             "@common/*": ["common/*"],
-            "@constants": ["constants"],
+            "@constants/*": ["constants/*"],
             "@modules": ["modules"],
             "@app-types": ["types"]
         }

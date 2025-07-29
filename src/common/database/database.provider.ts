@@ -1,5 +1,8 @@
+import {
+    DEFAULT_DB_PORT,
+    POSTGRES_DATA_SOURCE,
+} from '@constants/database.const';
 import { DataSource } from 'typeorm';
-import { DEFAULT_DB_PORT, POSTGRES_DATA_SOURCE } from '@constants';
 
 export const databaseProvider = [
     {
