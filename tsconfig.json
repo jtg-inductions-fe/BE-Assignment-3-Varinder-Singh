@@ -19,6 +19,6 @@
         "strictBindCallApply": true,
         "noFallthroughCasesInSwitch": true
     },
-    "include": ["src", "test", "**/*.ts", "**/*.json"],
+    "include": ["src"],
     "extends": "./tsconfig.paths.json"
 }
