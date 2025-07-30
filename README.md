@@ -1,4 +1,4 @@
-# Data Driven Marketplace Lite
+# Data-Driven Marketplace Lite
 
 Demand-Driven Marketplace for household item (pre-owned/new/refurbished everything). Buyer will post their requirement with a budget, and sellers can bid to fulfilling that requirement.
 

@@ -2,7 +2,7 @@
     "name": "be-assignment-3-varinder-singh",
     "version": "0.0.1",
     "description": "Demand-Driven Marketplace for household item (pre-owned/new/refurbished everything). Buyer will post their requirement with a budget, and sellers can bid to fulfilling that requirement.",
-    "author": "",
+    "author": "Varinder Singh",
     "private": true,
     "license": "MIT",
     "scripts": {
