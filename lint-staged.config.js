@@ -1,4 +1,4 @@
 export default {
     '/src/**/*{ts,js}': ['yarn lint'],
-    '*': ['yarn format'],
+    '*{ts,js, json, }': ['yarn format'],
 };
