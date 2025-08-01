@@ -11,14 +11,14 @@ export class UserService {
     ) {}
 
     async findOne(email: string) {
-        return await this.userRepository.findOneBy({ email: email });
+        return this.userRepository.findOneBy({ email: email });
     }
 
     async create(user: UserType) {
-        return await this.userRepository.save(user);
+        return this.userRepository.save(user);
     }
 
     async updateOne(updatedUser: Partial<UserType & { user_id: string }>) {
-        return await this.userRepository.save(updatedUser);
+        return this.userRepository.save(updatedUser);
     }
 }

@@ -7,7 +7,6 @@ import { MailService } from '../../mail/mail.service';
 import { UserVerificationService } from '../../user/services/userVerification.service';
 import {
     ConflictException,
-    ForbiddenException,
     InternalServerErrorException,
     NotFoundException,
 } from '@nestjs/common';

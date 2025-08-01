@@ -12,7 +12,7 @@ export class UserVerificationService {
     ) {}
 
     async findOne(uniqueString: string) {
-        return await this.userVerifyRepository.findOne({
+        return this.userVerifyRepository.findOne({
             where: {
                 unique_string: uniqueString,
             },
@@ -21,11 +21,11 @@ export class UserVerificationService {
     }
 
     async create(userVerify: UserVerifyType) {
-        return await this.userVerifyRepository.save(userVerify);
+        return this.userVerifyRepository.save(userVerify);
     }
 
     async deleteOne(userVerifyId: string) {
-        return await this.userVerifyRepository.delete({
+        return this.userVerifyRepository.delete({
             user_verify_id: userVerifyId,
         });
     }

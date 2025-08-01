@@ -34,22 +34,22 @@ export const mockResponse: Response = {
     json: jest.fn().mockReturnThis(),
 } as any as Response;
 
-export let mockUserService = {
+export const mockUserService = {
     findOne: jest.fn().mockReturnThis(),
     create: jest.fn().mockReturnThis(),
     updateOne: jest.fn().mockReturnThis(),
 };
 
-export let mockUserVerificationService = {
+export const mockUserVerificationService = {
     findOne: jest.fn(),
     create: jest.fn(),
     updateOne: jest.fn(),
 };
 
-export let mockMailService = {
+export const mockMailService = {
     sendMail: jest.fn(),
 };
 
-export let mockJWTService = {
+export const mockJWTService = {
     signAsync: jest.fn(),
 };
