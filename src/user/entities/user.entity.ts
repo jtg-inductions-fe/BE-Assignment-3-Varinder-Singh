@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { UserVerify } from './userVerify.entity';
 
 @Entity()
 export class User {
@@ -15,7 +16,7 @@ export class User {
     password: string;
 
     @Column()
-    role: string;
+    role: 'admin' | 'seller' | 'buyer';
 
     @Column()
     is_verified: boolean;
