@@ -6,7 +6,7 @@ import {
     OneToOne,
     PrimaryGeneratedColumn,
 } from 'typeorm';
-import { User } from './user.entity';
+import { User } from '../entities/user.entity';
 
 @Entity()
 export class UserVerify {

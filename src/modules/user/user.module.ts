@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { UserController } from './user.controller';
 import { UserService } from './services/user.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from './entities/user.entity';
-import { UserVerify } from './entities/userVerify.entity';
+import { User } from '../auth/test/entities/testUser.entity';
+import { UserVerify } from '../auth/test/entities/testUserVerify.entity';
 import { UserVerificationService } from './services/userVerification.service';
 
 @Module({

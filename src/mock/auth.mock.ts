@@ -1,5 +1,5 @@
-import { signinDto } from 'auth/dto/signin.dto';
-import { signupDto } from '../auth/dto/signup.dto';
+import { signinDto } from 'modules/auth/dto/signin.dto';
+import { signupDto } from '../modules/auth/dto/signup.dto';
 
 export const mockUser = {
     user_id: '31be7a70-2c19-49f7-a359-cde3dbfafe58',
@@ -27,12 +27,6 @@ export const mockSigninDto: signinDto = {
     email: 'virenderdhillon104@gmail.com',
     password: 'strong-password',
 };
-
-export const mockResponse: Response = {
-    status: jest.fn().mockReturnThis(),
-    header: jest.fn().mockReturnThis(),
-    json: jest.fn().mockReturnThis(),
-} as any as Response;
 
 export const mockUserService = {
     findOne: jest.fn().mockReturnThis(),

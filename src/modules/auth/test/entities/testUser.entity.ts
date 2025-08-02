@@ -1,8 +1,7 @@
 import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { UserVerify } from './userVerify.entity';
 
 @Entity()
-export class User {
+export class TestUser {
     @PrimaryGeneratedColumn('uuid')
     user_id: string;
 

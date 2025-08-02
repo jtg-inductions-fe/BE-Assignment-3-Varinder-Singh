@@ -82,10 +82,7 @@ export class AuthService {
             await this.userVerificationService.findOne(uniqueString);
 
         if (!userVerification) {
-            return new HttpException(
-                'User verification does not exist',
-                HttpStatus.NOT_FOUND,
-            );
+            throw new NotFoundException('User verification does not exist');
         }
 
         // Update user verification
@@ -101,18 +98,18 @@ export class AuthService {
         return { message: 'User verified successfully' };
     }
 
-    async signin(signinDto: signinDto, res: Response) {
+    async signin(signinDto: signinDto) {
         // Check if user exists in database
         const existingUser = await this.userService.findOne(signinDto.email);
         if (!existingUser) {
-            return new NotFoundException(
+            throw new NotFoundException(
                 "User doesn't exist with provided email id",
             );
         }
 
         // Check if user is verified or not
         if (!existingUser.is_verified) {
-            return new ForbiddenException(
+            throw new ForbiddenException(
                 'User is not verified. Kindly check your email address for verification.',
             );
         }
@@ -123,7 +120,7 @@ export class AuthService {
             existingUser.password,
         );
         if (!validPassword) {
-            return new UnauthorizedException('Invalid email or password.');
+            throw new UnauthorizedException('Invalid email or password.');
         }
 
         // Payload for jwt token
@@ -138,8 +135,9 @@ export class AuthService {
             expiresIn: '24h',
         });
 
-        res.status(200)
-            .header('Authorization', `Bearer ${jwt_token}`)
-            .json({ message: 'User signed in successfully' });
+        return {
+            message: 'User signed in successfully',
+            payload: { token: jwt_token },
+        };
     }
 }

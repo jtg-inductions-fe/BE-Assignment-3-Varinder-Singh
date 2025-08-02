@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UserVerify } from '../entities/userVerify.entity';
 import { UserVerifyType } from '../types/userVerify.types';
+import { UserVerify } from '../../user/entities/userVerify.entity';
 
 @Injectable()
 export class UserVerificationService {

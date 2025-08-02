@@ -5,9 +5,9 @@ import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
-import { AuthModule } from 'auth/auth.module';
-import { UserModule } from 'user/user.module';
-import { MailModule } from './mail/mail.module';
+import { AuthModule } from '@modules/auth/auth.module';
+import { UserModule } from '@modules/user/user.module';
+import { MailModule } from '@modules/mail/mail.module';
 
 @Module({
   imports: [
