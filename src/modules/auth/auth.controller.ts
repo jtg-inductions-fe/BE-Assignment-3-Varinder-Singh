@@ -1,24 +1,25 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+
+import { AuthService } from './auth.service';
 import { signinDto } from './dto/signin.dto';
 import { signupDto } from './dto/signup.dto';
-import { AuthService } from './auth.service';
 
 @Controller()
 export class AuthController {
-    constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) {}
 
-    @Post('/signup')
-    signup(@Body() signupDto: signupDto) {
-        return this.authService.signup(signupDto);
-    }
+  @Post('/signup')
+  signup(@Body() signupDto: signupDto) {
+    return this.authService.signup(signupDto);
+  }
 
-    @Post('/signin')
-    signin(@Body() signinDto: signinDto) {
-        return this.authService.signin(signinDto);
-    }
+  @Post('/signin')
+  signin(@Body() signinDto: signinDto) {
+    return this.authService.signin(signinDto);
+  }
 
-    @Get('/verify/:uniqueString')
-    verifyUser(@Param('uniqueString') uniqueString: string) {
-        return this.authService.verifyUser(uniqueString);
-    }
+  @Get('/verify/:uniqueString')
+  verifyUser(@Param('uniqueString') uniqueString: string) {
+    return this.authService.verifyUser(uniqueString);
+  }
 }
