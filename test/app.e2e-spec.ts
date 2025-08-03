@@ -22,7 +22,7 @@ describe('AppController (e2e)', () => {
     return request(app.getHttpServer())
       .get('/health')
       .expect(200)
-      .expect('app is running!');
+      .expect({ message: 'app is running!' });
   });
 
   afterAll(() => {
