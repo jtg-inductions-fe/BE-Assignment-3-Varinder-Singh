@@ -1,25 +1,29 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
+
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { DEFAULT_DB_PORT } from '@constants/database.const';
 
 @Module({
-    imports: [
-        ConfigModule.forRoot({ isGlobal: true }),
-        TypeOrmModule.forRoot({
-            type: 'postgres',
-            host: process.env.DB_HOST,
-            port: parseInt(process.env.DB_PORT || '') || DEFAULT_DB_PORT,
-            username: process.env.DB_USERNAME,
-            password: `${process.env.DB_PASSWORD}`,
-            database: process.env.DB_NAME,
-            autoLoadEntities: true,
-            synchronize: true,
-        }),
-    ],
-    controllers: [AppController],
-    providers: [AppService],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (cfg: ConfigService): TypeOrmModuleOptions => ({
+        type: 'postgres',
+        host: cfg.get<string>('DB_HOST'),
+        port: cfg.get<number>('DB_PORT'),
+        username: cfg.get<string>('DB_USERNAME'),
+        password: cfg.get<string>('DB_PASSWORD'),
+        database: cfg.get<string>('DB_NAME'),
+        synchronize: true,
+        autoLoadEntities: true,
+      }),
+    }),
+  ],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}

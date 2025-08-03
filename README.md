@@ -13,48 +13,40 @@ To set up the project on your local environment, follow these steps:
 
 1. **Clone the Repository**
 
-    First, you need to clone the repository.
+   First, you need to clone the repository.
 
 2. **Install the necessary dependencies using yarn**
 
-    ```bash
-    yarn
-    ```
+   ```bash
+   yarn
+   ```
 
-    > **_NOTE_** : It is recommended to update all packages to their latest versions by running `yarn upgrade --latest`. If the updated packages introduce breaking changes, you may need to adjust the base template accordingly.
+   > **_NOTE_** : It is recommended to update all packages to their latest versions by running `yarn upgrade --latest`. If the updated packages introduce breaking changes, you may need to adjust the base template accordingly.
 
 3. **Create .env file**
 
-Create .env file at root of project, provide required variables listed in .env.template
+   Create .env file at root of project, provide required variables listed in .env.template
 
-3. **Run the Development Server**
+4. **Run the Development Server**
 
-    ```bash
-    yarn start:dev
-    ```
+   ```bash
+   yarn start:dev
+   ```
 
-    The app will typically be available at http://localhost:3000, but check the terminal output for the exact URL.
+5. **Format the Code**
 
-    > **_NOTE:_** : If you want to change the server's port number, you can do so by modifying **.env file** at the root level of the project and update the PORT field (check **.env.template** for reference)
+   ```bash
+   yarn format
+   ```
 
-    ```env
-    PORT=<New Port>
-    ```
+6. **Lint the Code**
 
-4. **Format the Code**
+   ```bash
+   yarn lint
+   ```
 
-    ```bash
-    yarn format
-    ```
+7. **To Fix Lint errors**
 
-5. **Lint the Code**
-
-    ```bash
-    yarn lint
-    ```
-
-6. **To Fix Lint errors**
-
-    ```bash
-    yarn lint --fix
-    ```
+   ```bash
+   yarn lint --fix
+   ```
