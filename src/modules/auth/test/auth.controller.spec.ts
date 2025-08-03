@@ -1,21 +1,16 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
+import { getRepositoryToken } from '@nestjs/typeorm';
 
-import { mockSigninDto } from 'mock/auth.mock';
 import * as request from 'supertest';
 import { App } from 'supertest/types';
 import { Repository } from 'typeorm';
+import { createTestModule } from 'utils/createTestModule';
 
-import { DEFAULT_DB_PORT } from '../../../constants/database.const';
-import { MailService } from '../../mail/mail.service';
-import { User } from '../../user/entities/user.entity';
-import { UserVerify } from '../../user/entities/userVerify.entity';
-import { UserService } from '../../user/services/user.service';
-import { UserVerificationService } from '../../user/services/userVerification.service';
-import { AuthController } from '../auth.controller';
-import { AuthService } from '../auth.service';
+import { mockSigninDto } from '@mock/auth.mock';
+import { UserService } from '@modules/user/services/user.service';
+import { UserVerificationService } from '@modules/user/services/userVerification.service';
+import { UserType } from '@modules/user/types/user.types';
+
 import { TestUser } from './entities/testUser.entity';
 import { TestUserVerify } from './entities/testUserVerify.entity';
 
@@ -23,9 +18,13 @@ const mockMailService = {
   sendMail: jest.fn().mockResolvedValue(true),
 };
 
-const mockJwtService = {
-  signAsync: jest.fn(() => Promise.resolve('mock-jwt-token')),
-  verify: jest.fn(() => ({ userId: 1 })),
+const user: UserType & { user_id: string } = {
+  user_id: '31be7a70-2c19-49f7-a359-cde3dbfafe58',
+  name: 'Test User',
+  email: 'testuser@example.com',
+  password: 'Test@1234',
+  role: 'buyer',
+  is_verified: false,
 };
 
 describe('AuthController (integration)', () => {
@@ -36,45 +35,7 @@ describe('AuthController (integration)', () => {
   let userVerifyRepository: Repository<TestUserVerify>;
 
   beforeAll(async () => {
-    const moduleRef: TestingModule = await Test.createTestingModule({
-      imports: [
-        TypeOrmModule.forRoot({
-          type: 'postgres',
-          host: process.env.DB_HOST || 'localhost',
-          port: parseInt(process.env.DB_PORT || '') || DEFAULT_DB_PORT,
-          username: 'root',
-          password: 'root',
-          database: 'testfeassignment3',
-          entities: [TestUser, TestUserVerify],
-          synchronize: true,
-          dropSchema: true,
-        }),
-        TypeOrmModule.forFeature([TestUser, TestUserVerify]),
-      ],
-      controllers: [AuthController],
-      providers: [
-        AuthService,
-        UserService,
-        UserVerificationService,
-        {
-          provide: MailService,
-          useValue: mockMailService,
-        },
-        {
-          provide: JwtService,
-          useValue: mockJwtService,
-        },
-        {
-          provide: getRepositoryToken(User),
-          useExisting: getRepositoryToken(TestUser),
-        },
-        {
-          provide: getRepositoryToken(UserVerify),
-          useExisting: getRepositoryToken(TestUserVerify),
-        },
-      ],
-    }).compile();
-
+    const moduleRef = await createTestModule();
     app = moduleRef.createNestApplication();
     app.useGlobalPipes(new ValidationPipe());
     await app.init();
@@ -92,14 +53,6 @@ describe('AuthController (integration)', () => {
     await userRepository.query('TRUNCATE TABLE test_user CASCADE;');
   });
 
-  const user = {
-    user_id: '31be7a70-2c19-49f7-a359-cde3dbfafe58',
-    name: 'Test User',
-    email: 'testuser@example.com',
-    password: 'Test@1234',
-    role: 'buyer',
-  };
-
   it('should be defined', () => {
     expect(app).toBeDefined();
     expect(userService).toBeDefined();
@@ -113,15 +66,14 @@ describe('AuthController (integration)', () => {
         .send(user)
         .expect(201);
 
-      expect(res.body.message).toBe(
+      expect(res.body).toHaveProperty(
+        'message',
         'User registered successfully. Please verify your email to activate your account.',
       );
 
       const createdUser = await userService.findOne(user.email);
       expect(createdUser).toBeDefined();
-      expect(createdUser?.email).toBe(user.email);
-      expect(createdUser?.name).toBe(user.name);
-      expect(createdUser?.is_verified).toBe(false);
+      expect(createdUser).toStrictEqual(user);
 
       expect(mockMailService.sendMail).toHaveBeenCalled();
     });
@@ -146,7 +98,7 @@ describe('AuthController (integration)', () => {
         .get(`/verify/${verification?.unique_string}`)
         .expect(200);
 
-      expect(res.body.message).toBe('User verified successfully');
+      expect(res.body).toHaveProperty('message', 'User verified successfully.');
 
       const verifiedUser = await userService.findOne(user.email);
       expect(verifiedUser?.is_verified).toBe(true);
@@ -166,7 +118,27 @@ describe('AuthController (integration)', () => {
         .send(mockSigninDto)
         .expect(401);
 
-      expect(res.body.message).toBe('Invalid email or password.');
+      expect(res.body).toHaveProperty('message', 'Invalid email or password.');
+    });
+  });
+
+  describe('signin', () => {
+    it('/POST /signin should return token and success message if credentials are valid', async () => {
+      await request(app.getHttpServer())
+        .post('/signup')
+        .send({ ...user, is_verified: true })
+        .expect(201);
+
+      const res = await request(app.getHttpServer())
+        .post('/signin')
+        .send({
+          email: user.email,
+          password: user.password,
+        })
+        .expect(201);
+
+      expect(res.body).toHaveProperty('message', 'User signed in successfully');
+      expect(res.body).toHaveProperty('payload.token');
     });
   });
 

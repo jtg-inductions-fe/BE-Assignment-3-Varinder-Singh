@@ -23,4 +23,8 @@ export class UserService {
   async updateOne(updatedUser: Partial<UserType & { user_id: string }>) {
     return this.userRepository.save(updatedUser);
   }
+
+  async delete(userId: string) {
+    return this.userRepository.delete({ user_id: userId });
+  }
 }

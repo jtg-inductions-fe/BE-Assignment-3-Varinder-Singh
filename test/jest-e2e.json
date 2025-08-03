@@ -7,7 +7,10 @@
     "^.+\\.(t|j)s$": "ts-jest"
   },
   "moduleNameMapper": {
-    "^@constants/(.*)$": "<rootDir>/../src/constants/$1",
-    "^@modules/(.*)$": "<rootDir>/..src/modules/$1"
+    "^@common/(.*)$": "<rootDir>/..src/common/$1",
+    "^@constants/(.*)$": "<rootDir>/..src/constants/$1",
+    "^@modules/(.*)$": "<rootDir>/../src/modules/$1",
+    "^@mock/(.*)$": "<rootDir>/..src/mock/$1",
+    "^@app-types$": "<rootDir>/..src/types"
   }
 }

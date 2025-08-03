@@ -1,6 +1,5 @@
-import { signinDto } from 'modules/auth/dto/signin.dto';
-
-import { signupDto } from '../modules/auth/dto/signup.dto';
+import { signinDto } from '@modules/auth/dto/signin.dto';
+import { signupDto } from '@modules/auth/dto/signup.dto';
 
 export const mockUser = {
   user_id: '31be7a70-2c19-49f7-a359-cde3dbfafe58',

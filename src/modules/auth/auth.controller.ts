@@ -9,13 +9,13 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('/signup')
-  signup(@Body() signupDto: signupDto) {
-    return this.authService.signup(signupDto);
+  signup(@Body() signupBody: signupDto) {
+    return this.authService.signup(signupBody);
   }
 
   @Post('/signin')
-  signin(@Body() signinDto: signinDto) {
-    return this.authService.signin(signinDto);
+  signin(@Body() signinBody: signinDto) {
+    return this.authService.signin(signinBody);
   }
 
   @Get('/verify/:uniqueString')

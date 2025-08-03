@@ -31,9 +31,7 @@ export const createTestModule = async (): Promise<TestingModule> => {
       TypeOrmModule.forRootAsync({
         imports: [ConfigModule],
         inject: [ConfigService],
-        useFactory: async (
-          configService: ConfigService,
-        ): Promise<TypeOrmModuleOptions> => ({
+        useFactory: (configService: ConfigService): TypeOrmModuleOptions => ({
           type: 'postgres',
           host: configService.get<string>('DB_HOST'),
           port: configService.get<number>('DB_PORT'),

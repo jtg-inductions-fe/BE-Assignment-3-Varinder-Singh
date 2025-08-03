@@ -19,10 +19,11 @@ import {
   mockUserService,
   mockUserVerificationService,
   mockUserVerify,
-} from '../../../mock/auth.mock';
-import { MailService } from '../../mail/mail.service';
-import { UserService } from '../../user/services/user.service';
-import { UserVerificationService } from '../../user/services/userVerification.service';
+} from '@mock/auth.mock';
+import { MailService } from '@modules/mail/mail.service';
+import { UserService } from '@modules/user/services/user.service';
+import { UserVerificationService } from '@modules/user/services/userVerification.service';
+
 import { AuthController } from '../auth.controller';
 import { AuthService } from '../auth.service';
 

@@ -5,6 +5,7 @@
       "@common/*": ["common/*"],
       "@constants/*": ["constants/*"],
       "@modules/*": ["modules/*"],
+      "@mock/*": ["mock/*"],
       "@app-types": ["types"]
     }
   }

@@ -26,22 +26,22 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async signup(signupDto: signupDto) {
+  async signup(signupBody: signupDto) {
     // Check if user already exists with same email id
-    const userExists = await this.userService.findOne(signupDto.email);
+    const userExists = await this.userService.findOne(signupBody.email);
     if (userExists) {
       throw new ConflictException('User already exits.');
     }
 
-    const hashedPassword = await bcrypt.hash(signupDto.password, 10);
-    signupDto.password = hashedPassword;
+    const hashedPassword = await bcrypt.hash(signupBody.password, 10);
+    signupBody.password = hashedPassword;
 
     // Create new user
     const user = await this.userService.create({
-      ...signupDto,
+      ...signupBody,
       is_verified: false,
     });
-    if (!user) {
+    if (!user.user_id) {
       throw new InternalServerErrorException('An error occured');
     }
 
@@ -58,7 +58,7 @@ export class AuthService {
       unique_string: uniqueString,
     });
 
-    if (!userVerify) {
+    if (!userVerify.user_verify_id) {
       throw new InternalServerErrorException('An error occured');
     }
 
@@ -95,9 +95,9 @@ export class AuthService {
     return { message: 'User verified successfully' };
   }
 
-  async signin(signinDto: signinDto) {
+  async signin(signinBody: signinDto) {
     // Check if user exists in database
-    const existingUser = await this.userService.findOne(signinDto.email);
+    const existingUser = await this.userService.findOne(signinBody.email);
     if (!existingUser) {
       throw new NotFoundException("User doesn't exist with provided email id");
     }
@@ -111,7 +111,7 @@ export class AuthService {
 
     // Checking password with existing user password
     const validPassword = await bcrypt.compare(
-      signinDto.password,
+      signinBody.password,
       existingUser.password,
     );
     if (!validPassword) {
@@ -119,20 +119,21 @@ export class AuthService {
     }
 
     // Payload for jwt token
-    const payload = {
+    const userPayload = {
+      userId: existingUser.user_id,
       name: existingUser.name,
       email: existingUser.email,
       role: existingUser.role,
     };
 
-    const jwt_token = await this.jwtService.signAsync(payload, {
+    const jwt_token = await this.jwtService.signAsync(userPayload, {
       secret: process.env.JWT_SECRET,
       expiresIn: '24h',
     });
 
     return {
       message: 'User signed in successfully',
-      payload: { token: jwt_token },
+      payload: { token: jwt_token, user: userPayload },
     };
   }
 }

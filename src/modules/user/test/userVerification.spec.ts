@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 
-import { UserVerify } from '../../user/entities/userVerify.entity';
-import { UserVerificationService } from '../../user/services/userVerification.service';
+import { UserVerify } from '../entities/userVerify.entity';
+import { UserVerificationService } from '../services/userVerification.service';
 
 describe('UserVerificationService', () => {
   let service: UserVerificationService;
