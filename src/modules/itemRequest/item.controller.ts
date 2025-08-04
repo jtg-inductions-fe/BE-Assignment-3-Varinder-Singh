@@ -12,6 +12,7 @@ import {
 
 import { Roles } from 'decorators/roles.decorator';
 import { AuthGuard } from 'guards/auth.guard';
+import { RoleGuard } from 'guards/role.guard';
 import { AuthenticatedRequest } from 'guards/types/authenticatedRequest.types';
 
 import { CreateItemDto } from './dto/createItem.dto';
@@ -22,7 +23,7 @@ import { ItemService } from './item.service';
 export class ItemController {
   constructor(private readonly itemService: ItemService) {}
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RoleGuard)
   @Roles(['buyer'])
   @Post()
   create(
@@ -32,28 +33,28 @@ export class ItemController {
     return this.itemService.create(createItemDto, request);
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RoleGuard)
   @Roles(['seller', 'admin'])
   @Get()
   findAll() {
     return this.itemService.findAll();
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RoleGuard)
   @Roles(['buyer', 'admin'])
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.itemService.findOne(id);
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RoleGuard)
   @Roles(['buyer'])
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateItemDto: UpdateItemDto) {
     return this.itemService.update(id, updateItemDto);
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RoleGuard)
   @Roles(['buyer', 'admin'])
   @Delete(':id')
   delete(@Param('id') id: string) {

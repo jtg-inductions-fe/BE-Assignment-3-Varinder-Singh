@@ -16,13 +16,18 @@ export class ItemService {
   ) {}
 
   async create(createItemDto: CreateItemDto, request: AuthenticatedRequest) {
-    const minimumValidTime = new Date(createItemDto.start_time);
-    minimumValidTime.setHours(createItemDto.start_time.getHours() + 48);
+    // Calculating difference in milliseconds
+    const diff =
+      createItemDto.end_time.getTime() - createItemDto.start_time.getTime();
 
-    if (!(createItemDto.end_time >= minimumValidTime))
+    // 1000 milliseconds * 60 minutes * 60 hours division gives total hours difference
+    const hours = diff / (1000 * 60 * 60);
+
+    if (hours < 48 || !Number.isInteger(hours)) {
       throw new BadRequestException(
-        'Minimum time difference between start end time must be 48 hours.',
+        'Minimum time difference between start end time must be 48 hours and time must be in increments of 1 hour.',
       );
+    }
 
     const user = { requester_user_id: request.user.userId, ...createItemDto };
     return this.itemRequestRepository.save(user);

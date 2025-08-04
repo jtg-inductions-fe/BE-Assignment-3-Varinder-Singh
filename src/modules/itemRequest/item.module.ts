@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
@@ -12,8 +13,12 @@ import { ItemService } from './item.service';
 @Module({
   imports: [
     TypeOrmModule.forFeature([ItemRequest]),
-    JwtModule.register({
-      secret: '6b6bfe63-8220-47ab-ab1e-239ce9a4b36c',
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+      }),
     }),
   ],
   controllers: [ItemController],
