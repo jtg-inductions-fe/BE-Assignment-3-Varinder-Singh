@@ -19,6 +19,9 @@ import { UserService } from '@modules/user/services/user.service';
 import { UserVerificationService } from '@modules/user/services/userVerification.service';
 import { UserController } from '@modules/user/user.controller';
 
+import { AppController } from '../app.controller';
+import { AppService } from '../app.service';
+
 export const createTestModule = async (): Promise<TestingModule> => {
   return Test.createTestingModule({
     imports: [
@@ -52,8 +55,9 @@ export const createTestModule = async (): Promise<TestingModule> => {
       TypeOrmModule.forFeature([TestUser, TestUserVerify]),
     ],
 
-    controllers: [AuthController, UserController],
+    controllers: [AppController, AuthController, UserController],
     providers: [
+      AppService,
       AuthService,
       UserService,
       UserVerificationService,
