@@ -1,4 +1,3 @@
-import { IsDate, IsNotEmpty } from 'class-validator';
 import {
   Column,
   Entity,
@@ -19,10 +18,8 @@ export class UserVerify {
   user: User;
 
   @Column()
-  @IsNotEmpty()
   unique_string: string;
 
   @Column()
-  @IsDate()
   expiring_at: Date;
 }

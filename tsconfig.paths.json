@@ -2,8 +2,9 @@
   "compilerOptions": {
     "baseUrl": "./src",
     "paths": {
-      "@common/*": ["common/*"],
       "@constants/*": ["constants/*"],
+      "@decorators/*": ["decorators/*"],
+      "@guards/*": ["guards/*"],
       "@modules/*": ["modules/*"],
       "@utils/*": ["utils/*"],
       "@mock/*": ["mock/*"],

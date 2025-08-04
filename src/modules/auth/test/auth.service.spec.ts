@@ -27,7 +27,7 @@ import { UserVerificationService } from '@modules/user/services/userVerification
 import { AuthController } from '../auth.controller';
 import { AuthService } from '../auth.service';
 
-describe('AuthService', () => {
+describe('AuthService (unit)', () => {
   let service: AuthService;
 
   beforeEach(async () => {

@@ -5,7 +5,7 @@ import { User } from '../entities/user.entity';
 import { UserService } from '../services/user.service';
 import { UserType } from '../types/user.types';
 
-describe('UserService', () => {
+describe('UserService (unit)', () => {
   let service: UserService;
 
   const mockUserRepository = {

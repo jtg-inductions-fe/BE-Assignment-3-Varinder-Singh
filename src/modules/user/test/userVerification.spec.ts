@@ -4,7 +4,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { UserVerify } from '../entities/userVerify.entity';
 import { UserVerificationService } from '../services/userVerification.service';
 
-describe('UserVerificationService', () => {
+describe('UserVerificationService (unit)', () => {
   let service: UserVerificationService;
 
   const mockUserVerifyRepository = {

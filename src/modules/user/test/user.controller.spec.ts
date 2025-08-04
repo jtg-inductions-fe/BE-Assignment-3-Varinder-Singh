@@ -7,8 +7,8 @@ import { Repository } from 'typeorm';
 
 import { TestUser } from '@modules/auth/test/entities/testUser.entity';
 import { TestUserVerify } from '@modules/auth/test/entities/testUserVerify.entity';
+import { createTestModule } from '@utils/createTestModule.utils';
 
-import { createTestModule } from '../../../utils/createTestModule.utils';
 import { UserType } from '../types/user.types';
 
 const user: UserType & { user_id: string } = {
@@ -20,7 +20,7 @@ const user: UserType & { user_id: string } = {
   is_verified: false,
 };
 
-describe('UserController', () => {
+describe('UserController (integration)', () => {
   let app: INestApplication<App>;
   let userRepository: Repository<TestUser>;
   let userVerifyRepository: Repository<TestUserVerify>;
@@ -44,9 +44,23 @@ describe('UserController', () => {
     jest.clearAllMocks();
   });
 
+  describe('findOne', () => {
+    it('/GET /user/:email should return user if exists', async () => {
+      await userRepository.save({ ...user, is_verified: true });
+
+      await request(app.getHttpServer())
+        .get(`/user/${user.email}`)
+        .expect({ ...user, is_verified: true });
+    });
+
+    it("/GET /user/:email should return null if user doesn't exist", async () => {
+      await request(app.getHttpServer()).get(`/user/${user.email}`).expect({});
+    });
+  });
+
   describe('updateOne', () => {
-    it('should update a user and return the result', async () => {
-      userRepository.save({ ...user, is_verified: true });
+    it('/PATCH /user/:userId should update a user and return the result', async () => {
+      await userRepository.save({ ...user, is_verified: true });
 
       const updatedUser = {
         user_id: user.user_id,
@@ -54,14 +68,14 @@ describe('UserController', () => {
       };
 
       await request(app.getHttpServer())
-        .put(`/user/${user.user_id}`)
+        .patch(`/user/${user.user_id}`)
         .send({ name: 'Updated Name' })
         .expect(updatedUser);
     });
   });
 
   describe('delete', () => {
-    it('should return affected rows = 1 if user is deleted', async () => {
+    it('/DELETE /user/:userId should return affected rows = 1 if user is deleted', async () => {
       await userRepository.save({ ...user, is_verified: true });
 
       const result = {
@@ -74,7 +88,7 @@ describe('UserController', () => {
         .expect(result);
     });
 
-    it('should return affected rows = 0 if no user is deleted', async () => {
+    it('/DELETE /user/:userId should return affected rows = 0 if no user is deleted', async () => {
       const result = {
         raw: [],
         affected: 0,
