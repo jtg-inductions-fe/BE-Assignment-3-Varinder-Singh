@@ -1,9 +1,4 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
 import { Roles } from 'decorators/roles.decorator';
@@ -23,13 +18,6 @@ export class RoleGuard implements CanActivate {
 
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const user = request.user;
-
-    if (
-      ['buyer', 'seller'].includes(user.role) &&
-      (!user.address || !user.phoneNo)
-    ) {
-      throw new UnauthorizedException('Phone no. and address are required');
-    }
 
     return roles.includes(user.role);
   }
