@@ -1,14 +1,17 @@
 import {
   CanActivate,
   ExecutionContext,
+  Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
-import { UserType } from '@modules/user/types/user.types';
+import {
+  AuthenticatedRequest,
+  payloadUser,
+} from './types/authenticatedRequest.types';
 
-import { AuthenticatedRequest } from './types/authenticatedRequest.types';
-
+@Injectable()
 export class AuthGuard implements CanActivate {
   constructor(private jwtService: JwtService) {}
 
@@ -24,7 +27,7 @@ export class AuthGuard implements CanActivate {
     if (!token && type !== 'Bearer') return false;
 
     try {
-      const user: UserType = this.jwtService.verify(token);
+      const user: payloadUser = this.jwtService.verify(token);
       request.user = user;
       return true;
     } catch {

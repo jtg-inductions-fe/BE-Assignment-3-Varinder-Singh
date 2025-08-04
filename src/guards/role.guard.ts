@@ -1,10 +1,11 @@
-import { CanActivate, ExecutionContext } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
 import { Roles } from 'decorators/roles.decorator';
 
 import { AuthenticatedRequest } from './types/authenticatedRequest.types';
 
+@Injectable()
 export class RoleGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 

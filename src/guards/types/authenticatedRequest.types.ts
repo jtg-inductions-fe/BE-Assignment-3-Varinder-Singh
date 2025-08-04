@@ -1,7 +1,12 @@
 import { Request } from 'express';
 
-import { UserType } from '@modules/user/types/user.types';
+export interface payloadUser {
+  userId: string;
+  name: string;
+  email: string;
+  role: string;
+}
 
 export interface AuthenticatedRequest extends Request {
-  user: UserType;
+  user: payloadUser;
 }
