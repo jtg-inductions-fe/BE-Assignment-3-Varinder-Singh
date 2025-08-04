@@ -4,7 +4,6 @@
   "description": "Demand-Driven Marketplace for household item (pre-owned/new/refurbished everything). Buyer will post their requirement with a budget, and sellers can bid to fulfilling that requirement.",
   "author": "Varinder Singh",
   "private": true,
-  "type": "module",
   "license": "MIT",
   "scripts": {
     "build": "nest build",
@@ -16,7 +15,7 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:e2e": "node -r tsconfig-paths/register -r ts-node/register ./node_modules/.bin/jest --config ./test/jest-e2e.json --runInBand",
     "prepare": "husky"
   },
   "dependencies": {
@@ -84,7 +83,16 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^@constants/(.*)$": "<rootDir>/constants/$1",
+      "^@decorators/(.*)$": "<rootDir>/decorators/$1",
+      "^@guards/(.*)$": "<rootDir>/guards/$1",
+      "^@modules/(.*)$": "<rootDir>/modules/$1",
+      "^@utils/(.*)$": "<rootDir>/utils/$1",
+      "^@mock/(.*)$": "<rootDir>/mock/$1",
+      "^@app-types$": "<rootDir>/types"
+    }
   },
   "engines": {
     "node": ">=16.0.0"

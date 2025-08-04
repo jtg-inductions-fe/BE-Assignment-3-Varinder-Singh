@@ -2,6 +2,8 @@ import {
   IsEmail,
   IsIn,
   IsNotEmpty,
+  IsOptional,
+  IsPhoneNumber,
   IsString,
   IsStrongPassword,
   MaxLength,
@@ -22,6 +24,13 @@ export class signupDto {
   @IsNotEmpty()
   @IsStrongPassword()
   password: string;
+
+  @IsOptional()
+  @IsPhoneNumber()
+  phoneNo?: string;
+
+  @IsOptional()
+  address?: string;
 
   @IsNotEmpty()
   @IsIn(['admin', 'seller', 'buyer'])

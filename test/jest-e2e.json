@@ -1,16 +1,18 @@
 {
   "moduleFileExtensions": ["js", "json", "ts"],
-  "rootDir": ".",
+  "rootDir": "./",
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
   },
   "moduleNameMapper": {
-    "^@common/(.*)$": "<rootDir>/..src/common/$1",
-    "^@constants/(.*)$": "<rootDir>/..src/constants/$1",
+    "^@constants/(.*)$": "<rootDir>/../src/constants/$1",
+    "^@decorators/(.*)$": "<rootDir>/../src/decorators/$1",
+    "^@guards/(.*)$": "<rootDir>/../src/guards/$1",
     "^@modules/(.*)$": "<rootDir>/../src/modules/$1",
-    "^@mock/(.*)$": "<rootDir>/..src/mock/$1",
-    "^@app-types$": "<rootDir>/..src/types"
+    "^@utils/(.*)$": "<rootDir>/../src/utils/$1",
+    "^@mock/(.*)$": "<rootDir>/../src/mock/$1",
+    "^@app-types$": "<rootDir>/../src/types"
   }
 }

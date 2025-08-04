@@ -1,5 +1,5 @@
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
+import { JwtModule, JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
   getRepositoryToken,
@@ -17,8 +17,7 @@ import { User } from '@modules/user/entities/user.entity';
 import { UserVerify } from '@modules/user/entities/userVerify.entity';
 import { UserService } from '@modules/user/services/user.service';
 import { UserVerificationService } from '@modules/user/services/userVerification.service';
-
-import { AppModule } from '../app.module';
+import { UserController } from '@modules/user/user.controller';
 
 export const createTestModule = async (): Promise<TestingModule> => {
   return Test.createTestingModule({
@@ -26,6 +25,14 @@ export const createTestModule = async (): Promise<TestingModule> => {
       ConfigModule.forRoot({
         envFilePath: '.env.test',
         isGlobal: true,
+      }),
+
+      JwtModule.registerAsync({
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          secret: configService.get('JWT_SECRET'),
+        }),
+        inject: [ConfigService],
       }),
 
       TypeOrmModule.forRootAsync({
@@ -38,16 +45,14 @@ export const createTestModule = async (): Promise<TestingModule> => {
           username: configService.get<string>('DB_USERNAME'),
           password: configService.get<string>('DB_PASSWORD'),
           database: configService.get<string>('DB_NAME'),
-          autoLoadEntities: true,
+          entities: [TestUser, TestUserVerify],
           synchronize: true,
-          dropSchema: true,
         }),
       }),
-
-      AppModule,
+      TypeOrmModule.forFeature([TestUser, TestUserVerify]),
     ],
 
-    controllers: [AuthController],
+    controllers: [AuthController, UserController],
     providers: [
       AuthService,
       UserService,

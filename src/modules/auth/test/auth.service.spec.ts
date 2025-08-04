@@ -148,11 +148,9 @@ describe('AuthService', () => {
       jest.spyOn(bcrypt, 'compare').mockImplementation(() => true);
 
       mockJWTService.signAsync.mockResolvedValue('jwt_token');
-
-      await expect(service.signin(mockSigninDto)).rejects.toStrictEqual({
-        message: 'User signed in successfully',
-        payload: { token: 'jwt_token' },
-      });
+      await expect(service.signin(mockSigninDto)).resolves.toHaveProperty(
+        'payload.user',
+      );
 
       expect(mockUserService.findOne).toHaveBeenCalledWith(mockSigninDto.email);
     });

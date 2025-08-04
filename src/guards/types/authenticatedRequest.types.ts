@@ -5,6 +5,8 @@ export interface payloadUser {
   name: string;
   email: string;
   role: string;
+  phoneNo: number;
+  address: string;
 }
 
 export interface AuthenticatedRequest extends Request {

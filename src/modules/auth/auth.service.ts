@@ -41,7 +41,7 @@ export class AuthService {
       ...signupBody,
       is_verified: false,
     });
-    if (!user.user_id) {
+    if (!user) {
       throw new InternalServerErrorException('An error occured');
     }
 
@@ -58,7 +58,7 @@ export class AuthService {
       unique_string: uniqueString,
     });
 
-    if (!userVerify.user_verify_id) {
+    if (!userVerify) {
       throw new InternalServerErrorException('An error occured');
     }
 
@@ -82,6 +82,14 @@ export class AuthService {
 
     if (!userVerification) {
       throw new NotFoundException('User verification does not exist');
+    }
+
+    if (new Date() >= userVerification.expiring_at) {
+      await this.userService.delete(userVerification.user.user_id);
+      await this.userVerificationService.deleteOne(
+        userVerification.user_verify_id,
+      );
+      throw new UnauthorizedException('Token expired, please sign in again.');
     }
 
     // Update user verification

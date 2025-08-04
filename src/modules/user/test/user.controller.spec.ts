@@ -8,7 +8,7 @@ import { Repository } from 'typeorm';
 import { TestUser } from '@modules/auth/test/entities/testUser.entity';
 import { TestUserVerify } from '@modules/auth/test/entities/testUserVerify.entity';
 
-import { createTestModule } from '../../../utils/createTestModule';
+import { createTestModule } from '../../../utils/createTestModule.utils';
 import { UserType } from '../types/user.types';
 
 const user: UserType & { user_id: string } = {
@@ -40,14 +40,13 @@ describe('UserController', () => {
       'TRUNCATE TABLE test_user_verify CASCADE;',
     );
     await userRepository.query('TRUNCATE TABLE test_user CASCADE;');
+
+    jest.clearAllMocks();
   });
 
   describe('updateOne', () => {
     it('should update a user and return the result', async () => {
-      await request(app.getHttpServer())
-        .post('/signup')
-        .send({ ...user, is_verified: true })
-        .expect(201);
+      userRepository.save({ ...user, is_verified: true });
 
       const updatedUser = {
         user_id: user.user_id,
@@ -55,7 +54,7 @@ describe('UserController', () => {
       };
 
       await request(app.getHttpServer())
-        .put(`/users/${user.user_id}`)
+        .put(`/user/${user.user_id}`)
         .send({ name: 'Updated Name' })
         .expect(updatedUser);
     });
@@ -63,35 +62,36 @@ describe('UserController', () => {
 
   describe('delete', () => {
     it('should return affected rows = 1 if user is deleted', async () => {
-      await request(app.getHttpServer())
-        .post('/signup')
-        .send({ ...user, is_verified: true })
-        .expect(201);
+      await userRepository.save({ ...user, is_verified: true });
 
       const result = {
-        raw: {},
+        raw: [],
         affected: 1,
       };
 
       await request(app.getHttpServer())
-        .put(`/users/${user.user_id}`)
+        .delete(`/user/${user.user_id}`)
         .expect(result);
     });
 
     it('should return affected rows = 0 if no user is deleted', async () => {
-      await request(app.getHttpServer())
-        .post('/signup')
-        .send({ ...user, is_verified: true })
-        .expect(201);
-
       const result = {
-        raw: {},
+        raw: [],
         affected: 0,
       };
 
       await request(app.getHttpServer())
-        .delete(`/users/${user.user_id}`)
+        .delete(`/user/${user.user_id}`)
         .expect(result);
     });
+  });
+
+  afterAll(async () => {
+    await userVerifyRepository.query(
+      'TRUNCATE TABLE test_user_verify CASCADE;',
+    );
+    await userRepository.query('TRUNCATE TABLE test_user CASCADE;');
+
+    await app.close();
   });
 });

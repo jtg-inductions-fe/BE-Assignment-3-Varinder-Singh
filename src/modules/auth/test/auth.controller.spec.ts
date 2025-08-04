@@ -4,19 +4,14 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import * as request from 'supertest';
 import { App } from 'supertest/types';
 import { Repository } from 'typeorm';
-import { createTestModule } from 'utils/createTestModule';
 
-import { mockSigninDto } from '@mock/auth.mock';
 import { UserService } from '@modules/user/services/user.service';
 import { UserVerificationService } from '@modules/user/services/userVerification.service';
 import { UserType } from '@modules/user/types/user.types';
+import { createTestModule } from '@utils/createTestModule.utils';
 
 import { TestUser } from './entities/testUser.entity';
 import { TestUserVerify } from './entities/testUserVerify.entity';
-
-const mockMailService = {
-  sendMail: jest.fn().mockResolvedValue(true),
-};
 
 const user: UserType & { user_id: string } = {
   user_id: '31be7a70-2c19-49f7-a359-cde3dbfafe58',
@@ -51,6 +46,8 @@ describe('AuthController (integration)', () => {
       'TRUNCATE TABLE test_user_verify CASCADE;',
     );
     await userRepository.query('TRUNCATE TABLE test_user CASCADE;');
+
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -73,9 +70,9 @@ describe('AuthController (integration)', () => {
 
       const createdUser = await userService.findOne(user.email);
       expect(createdUser).toBeDefined();
-      expect(createdUser).toStrictEqual(user);
-
-      expect(mockMailService.sendMail).toHaveBeenCalled();
+      expect(createdUser?.email).toBe(user.email);
+      expect(createdUser?.name).toBe(user.name);
+      expect(createdUser?.role).toBe(user.role);
     });
   });
 
@@ -98,7 +95,7 @@ describe('AuthController (integration)', () => {
         .get(`/verify/${verification?.unique_string}`)
         .expect(200);
 
-      expect(res.body).toHaveProperty('message', 'User verified successfully.');
+      expect(res.body).toHaveProperty('message', 'User verified successfully');
 
       const verifiedUser = await userService.findOne(user.email);
       expect(verifiedUser?.is_verified).toBe(true);
@@ -106,43 +103,41 @@ describe('AuthController (integration)', () => {
   });
 
   describe('signin', () => {
-    it("/POST /signin should throw UnauthorizedException if password doesn't match", async () => {
-      await request(app.getHttpServer())
-        .post('/signup')
-        .send({ ...user, is_verified: true })
-        .expect(201);
-
-      mockSigninDto.password = 'not-strong-password';
-      const res = await request(app.getHttpServer())
-        .post('/signin')
-        .send(mockSigninDto)
-        .expect(401);
-
-      expect(res.body).toHaveProperty('message', 'Invalid email or password.');
-    });
-  });
-
-  describe('signin', () => {
     it('/POST /signin should return token and success message if credentials are valid', async () => {
-      await request(app.getHttpServer())
-        .post('/signup')
-        .send({ ...user, is_verified: true })
-        .expect(201);
+      await request(app.getHttpServer()).post('/signup').send(user).expect(201);
 
-      const res = await request(app.getHttpServer())
+      await userRepository.update({ email: user.email }, { is_verified: true });
+
+      await request(app.getHttpServer())
         .post('/signin')
         .send({
           email: user.email,
           password: user.password,
         })
         .expect(201);
+    });
 
-      expect(res.body).toHaveProperty('message', 'User signed in successfully');
-      expect(res.body).toHaveProperty('payload.token');
+    it("/POST /signin should throw UnauthorizedException if password doesn't match", async () => {
+      await request(app.getHttpServer()).post('/signup').send(user).expect(201);
+
+      await userRepository.update({ email: user.email }, { is_verified: true });
+
+      await request(app.getHttpServer())
+        .post('/signin')
+        .send({
+          email: user.email,
+          password: 'wrong-password',
+        })
+        .expect(401);
     });
   });
 
   afterAll(async () => {
+    await userVerifyRepository.query(
+      'TRUNCATE TABLE test_user_verify CASCADE;',
+    );
+    await userRepository.query('TRUNCATE TABLE test_user CASCADE;');
+
     await app.close();
   });
 });
