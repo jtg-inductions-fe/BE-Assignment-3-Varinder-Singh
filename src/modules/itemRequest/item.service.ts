@@ -1,8 +1,9 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { AuthenticatedRequest } from 'guards/types/authenticatedRequest.types';
 import { Repository } from 'typeorm';
+
+import { AuthenticatedRequest } from '@guards/types/authenticatedRequest.types';
 
 import { CreateItemDto } from './dto/createItem.dto';
 import { UpdateItemDto } from './dto/updateItem.dto';

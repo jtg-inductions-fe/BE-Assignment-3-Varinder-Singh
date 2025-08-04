@@ -10,10 +10,10 @@ import {
   UseGuards,
 } from '@nestjs/common';
 
-import { Roles } from 'decorators/roles.decorator';
-import { AuthGuard } from 'guards/auth.guard';
-import { RoleGuard } from 'guards/role.guard';
-import { AuthenticatedRequest } from 'guards/types/authenticatedRequest.types';
+import { Roles } from '@decorators/roles.decorator';
+import { AuthGuard } from '@guards/auth.guard';
+import { RoleGuard } from '@guards/role.guard';
+import { AuthenticatedRequest } from '@guards/types/authenticatedRequest.types';
 
 import { CreateItemDto } from './dto/createItem.dto';
 import { UpdateItemDto } from './dto/updateItem.dto';

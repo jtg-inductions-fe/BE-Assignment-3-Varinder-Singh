@@ -3,8 +3,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { AuthGuard } from 'guards/auth.guard';
-import { RoleGuard } from 'guards/role.guard';
+import { AuthGuard } from '@guards/auth.guard';
+import { RoleGuard } from '@guards/role.guard';
 
 import { ItemRequest } from './entities/itemRequest.entity';
 import { ItemController } from './item.controller';
