@@ -4,4 +4,6 @@ export interface UserType {
   password: string;
   role: 'admin' | 'seller' | 'buyer';
   is_verified: boolean;
+  phoneNo?: number;
+  address?: string;
 }
