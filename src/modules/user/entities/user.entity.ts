@@ -26,5 +26,11 @@ export class User {
   address?: string;
 
   @Column()
+  phone: number;
+
+  @Column()
+  address: string;
+
+  @Column()
   is_verified: boolean;
 }
