@@ -20,7 +20,11 @@ export class UserService {
     return this.userRepository.save(user);
   }
 
-  async updateOne(updatedUser: Partial<UserType & { user_id: string }>) {
+  async updateOne(
+    updatedUser: Partial<
+      UserType & { user_id: string; phoneNo: number; address: string }
+    >,
+  ) {
     return this.userRepository.save(updatedUser);
   }
 

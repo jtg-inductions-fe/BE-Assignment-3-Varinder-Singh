@@ -18,5 +18,11 @@ export class User {
   role: 'admin' | 'seller' | 'buyer';
 
   @Column()
+  phone: number;
+
+  @Column()
+  address: string;
+
+  @Column()
   is_verified: boolean;
 }
