@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { AuthenticatedRequest } from '@guards/types/authenticatedRequest.types';
+import { verifiedUser } from '@utils/verifiedUser.utils';
 
 import { CreateItemDto } from './dto/createItem.dto';
 import { UpdateItemDto } from './dto/updateItem.dto';
@@ -16,29 +17,7 @@ export class ItemService {
     private itemRequestRepository: Repository<ItemRequest>,
   ) {}
 
-  async verifiedUser(id: string) {
-    const itemInDb = await this.itemRequestRepository.findOne({
-      where: { item_id: id },
-      relations: ['requester'],
-    });
-
-    if (
-      !(itemInDb?.requester.user_id === id) ||
-      !itemInDb.requester.phoneNo ||
-      !itemInDb.requester.address
-    )
-      return false;
-
-    return true;
-  }
-
   async create(createItemDto: CreateItemDto, request: AuthenticatedRequest) {
-    const verifiedUser = await this.verifiedUser(request.user.userId);
-
-    if (!verifiedUser) {
-      throw new BadRequestException();
-    }
-
     // Calculating difference in milliseconds
     const diff =
       createItemDto.end_time.getTime() - createItemDto.start_time.getTime();
@@ -74,22 +53,28 @@ export class ItemService {
     });
   }
 
+  async verifyUser(request: AuthenticatedRequest) {
+    const itemInDb = await this.itemRequestRepository.findOne({
+      where: { requester: { user_id: request.user.userId } },
+      relations: ['requester'],
+    });
+
+    if (!verifiedUser(request.user.userId, itemInDb?.requester)) {
+      throw new BadRequestException('Invalid or unauthorized user');
+    }
+  }
+
   async update(
     id: string,
     updateItemDto: UpdateItemDto,
     request: AuthenticatedRequest,
   ) {
-    const verifiedUser = await this.verifiedUser(request.user.userId);
-
-    if (!verifiedUser) {
-      throw new BadRequestException();
-    }
-
+    await this.verifyUser(request);
     return this.itemRequestRepository.save({ item_id: id, ...updateItemDto });
   }
 
   async delete(id: string, request: AuthenticatedRequest) {
-    const verifiedUser = await this.verifiedUser(request.user.userId);
+    await this.verifyUser(request);
 
     if (!verifiedUser) {
       throw new BadRequestException();
