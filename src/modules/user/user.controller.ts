@@ -1,8 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch } from '@nestjs/common';
 
-import { signupDto } from '@modules/auth/dto/signup.dto';
-
 import { UserService } from './services/user.service';
+import { UserType } from './types/user.types';
 
 @Controller('user')
 export class UserController {
@@ -16,7 +15,10 @@ export class UserController {
   @Patch('/:userId')
   async update(
     @Param('userId') userId: string,
-    @Body() updateBody: Partial<signupDto>,
+    @Body()
+    updateBody: Partial<
+      UserType & { user_id: string; phone: string; address: string }
+    >,
   ) {
     return this.userService.updateOne({ user_id: userId, ...updateBody });
   }
