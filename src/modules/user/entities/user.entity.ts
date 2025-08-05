@@ -1,4 +1,3 @@
-import { IsOptional, IsPhoneNumber } from 'class-validator';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
@@ -17,13 +16,6 @@ export class User {
 
   @Column()
   role: 'admin' | 'seller' | 'buyer';
-
-  @IsOptional()
-  @IsPhoneNumber()
-  phoneNo?: string;
-
-  @IsOptional()
-  address?: string;
 
   @Column()
   phone: number;
