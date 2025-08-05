@@ -17,7 +17,29 @@ export class ItemService {
     private itemRequestRepository: Repository<ItemRequest>,
   ) {}
 
+  async verifiedUser(id: string) {
+    const itemInDb = await this.itemRequestRepository.findOne({
+      where: { item_id: id },
+      relations: ['requester'],
+    });
+
+    if (
+      !(itemInDb?.requester.user_id === id) ||
+      !itemInDb.requester.phoneNo ||
+      !itemInDb.requester.address
+    )
+      return false;
+
+    return true;
+  }
+
   async create(createItemDto: CreateItemDto, request: AuthenticatedRequest) {
+    const verifiedUser = await this.verifiedUser(request.user.userId);
+
+    if (!verifiedUser) {
+      throw new BadRequestException();
+    }
+
     // Calculating difference in milliseconds
     const diff =
       createItemDto.end_time.getTime() - createItemDto.start_time.getTime();
