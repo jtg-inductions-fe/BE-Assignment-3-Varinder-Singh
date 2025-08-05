@@ -16,7 +16,29 @@ export class ItemService {
     private itemRequestRepository: Repository<ItemRequest>,
   ) {}
 
+  async verifiedUser(id: string) {
+    const itemInDb = await this.itemRequestRepository.findOne({
+      where: { item_id: id },
+      relations: ['requester'],
+    });
+
+    if (
+      !(itemInDb?.requester.user_id === id) ||
+      !itemInDb.requester.phoneNo ||
+      !itemInDb.requester.address
+    )
+      return false;
+
+    return true;
+  }
+
   async create(createItemDto: CreateItemDto, request: AuthenticatedRequest) {
+    const verifiedUser = await this.verifiedUser(request.user.userId);
+
+    if (!verifiedUser) {
+      throw new BadRequestException();
+    }
+
     // Calculating difference in milliseconds
     const diff =
       createItemDto.end_time.getTime() - createItemDto.start_time.getTime();
@@ -35,24 +57,44 @@ export class ItemService {
   }
 
   async findAll() {
-    return this.itemRequestRepository.find();
+    return this.itemRequestRepository.find({ relations: ['requester'] });
   }
 
   async findOne(id: string) {
-    return this.itemRequestRepository.findOne({ where: { item_id: id } });
+    return this.itemRequestRepository.findOne({
+      where: { item_id: id },
+      relations: ['requester'],
+    });
   }
 
   async findAllByUser(userId: string) {
     return this.itemRequestRepository.find({
-      where: { requester_user_id: userId },
+      where: { requester: { user_id: userId } },
+      relations: ['requester'],
     });
   }
 
-  async update(id: string, updateItemDto: UpdateItemDto) {
+  async update(
+    id: string,
+    updateItemDto: UpdateItemDto,
+    request: AuthenticatedRequest,
+  ) {
+    const verifiedUser = await this.verifiedUser(request.user.userId);
+
+    if (!verifiedUser) {
+      throw new BadRequestException();
+    }
+
     return this.itemRequestRepository.save({ item_id: id, ...updateItemDto });
   }
 
-  async delete(id: string) {
+  async delete(id: string, request: AuthenticatedRequest) {
+    const verifiedUser = await this.verifiedUser(request.user.userId);
+
+    if (!verifiedUser) {
+      throw new BadRequestException();
+    }
+
     return this.itemRequestRepository.delete({ item_id: id });
   }
 }

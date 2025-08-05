@@ -21,7 +21,7 @@ export class ItemRequest {
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'requester_user_id' })
-  requester_user_id: string;
+  requester: User;
 
   @Column()
   start_time: Date;

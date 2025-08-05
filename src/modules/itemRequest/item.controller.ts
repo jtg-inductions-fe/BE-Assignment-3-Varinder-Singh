@@ -33,7 +33,7 @@ export class ItemController {
     return this.itemService.create(createItemDto, request);
   }
 
-  @UseGuards(AuthGuard, RoleGuard)
+  @UseGuards(AuthGuard)
   @Roles(['seller', 'admin'])
   @Get()
   findAll() {
@@ -50,14 +50,18 @@ export class ItemController {
   @UseGuards(AuthGuard, RoleGuard)
   @Roles(['buyer'])
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateItemDto: UpdateItemDto) {
-    return this.itemService.update(id, updateItemDto);
+  update(
+    @Param('id') id: string,
+    @Body() updateItemDto: UpdateItemDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.itemService.update(id, updateItemDto, request);
   }
 
   @UseGuards(AuthGuard, RoleGuard)
   @Roles(['buyer', 'admin'])
   @Delete(':id')
-  delete(@Param('id') id: string) {
-    return this.itemService.delete(id);
+  delete(@Param('id') id: string, @Req() request: AuthenticatedRequest) {
+    return this.itemService.delete(id, request);
   }
 }
