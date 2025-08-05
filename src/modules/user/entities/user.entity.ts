@@ -17,11 +17,11 @@ export class User {
   @Column()
   role: 'admin' | 'seller' | 'buyer';
 
-  @Column()
-  phone: number;
+  @Column({ type: 'bigint', nullable: true })
+  phone?: string;
 
-  @Column()
-  address: string;
+  @Column({ nullable: true })
+  address?: string;
 
   @Column()
   is_verified: boolean;
