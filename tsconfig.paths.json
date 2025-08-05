@@ -3,7 +3,11 @@
     "baseUrl": "./src",
     "paths": {
       "@constants/*": ["constants/*"],
+      "@decorators/*": ["decorators/*"],
+      "@guards/*": ["guards/*"],
       "@modules/*": ["modules/*"],
+      "@utils/*": ["utils/*"],
+      "@mock/*": ["mock/*"],
       "@app-types": ["types"]
     }
   }

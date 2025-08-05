@@ -2,6 +2,10 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 
+import { AuthModule } from '@modules/auth/auth.module';
+import { MailModule } from '@modules/mail/mail.module';
+import { UserModule } from '@modules/user/user.module';
+
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -22,6 +26,9 @@ import { AppService } from './app.service';
         autoLoadEntities: true,
       }),
     }),
+    AuthModule,
+    UserModule,
+    MailModule,
   ],
   controllers: [AppController],
   providers: [AppService],

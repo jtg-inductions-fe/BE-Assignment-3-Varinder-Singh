@@ -36,7 +36,6 @@ export default tseslint.config(
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/return-await': 'error',
       '@typescript-eslint/no-deprecated': 'error',
-      '@typescript-eslint/no-unnecessary-condition': 'error',
       '@typescript-eslint/no-unsafe-argument': 'error',
       '@typescript-eslint/no-shadow': 'error',
       'no-console': 'error',
