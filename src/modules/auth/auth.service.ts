@@ -41,7 +41,7 @@ export class AuthService {
       ...signupBody,
       is_verified: false,
     });
-    if (!user) {
+    if (!user.user_id) {
       throw new InternalServerErrorException('An error occured');
     }
 
@@ -58,7 +58,7 @@ export class AuthService {
       unique_string: uniqueString,
     });
 
-    if (!userVerify) {
+    if (!userVerify.user_verify_id) {
       throw new InternalServerErrorException('An error occured');
     }
 

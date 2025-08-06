@@ -10,7 +10,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const PORT = process.env.PORT ?? DEFAULT_PORT;
   app.useLogger(new Logger());
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe({ transform: true }));
 
   await app.listen(PORT).then(() => {
     Logger.log(`App is running on http://localhost:${PORT}`);
