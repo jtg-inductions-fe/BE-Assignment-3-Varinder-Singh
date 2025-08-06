@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AuthGuard } from '@guards/auth.guard';
 import { RoleGuard } from '@guards/role.guard';
+import { UserModule } from '@modules/user/user.module';
 
 import { ItemRequest } from './entities/itemRequest.entity';
 import { ItemController } from './item.controller';
@@ -20,6 +21,7 @@ import { ItemService } from './item.service';
         secret: configService.get<string>('JWT_SECRET'),
       }),
     }),
+    UserModule,
   ],
   controllers: [ItemController],
   providers: [ItemService, AuthGuard, RoleGuard],
