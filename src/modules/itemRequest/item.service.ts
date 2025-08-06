@@ -5,7 +5,7 @@ import { Repository } from 'typeorm';
 
 import { AuthenticatedRequest } from '@guards/types/authenticatedRequest.types';
 import { UserService } from '@modules/user/services/user.service';
-import { verifyUser } from '@utils/verifiedUser.utils';
+import { verifyUser } from '@utils/verifyUser.utils';
 
 import { CreateItemDto } from './dto/createItem.dto';
 import { UpdateItemDto } from './dto/updateItem.dto';
