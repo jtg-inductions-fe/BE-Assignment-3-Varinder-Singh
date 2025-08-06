@@ -19,19 +19,8 @@ export class ItemService {
     private itemRequestRepository: Repository<ItemRequest>,
   ) {}
 
-  async validateUser(request: AuthenticatedRequest) {
-    const verifiedUser = await verifyUser(
-      request.user.userId,
-      request.user.email,
-      this.userService,
-    );
-    if (!verifiedUser) {
-      throw new BadRequestException('Invalid or unauthorized user');
-    }
-  }
-
   async create(createItemDto: CreateItemDto, request: AuthenticatedRequest) {
-    await this.validateUser(request);
+    await verifyUser(request.user.userId, request.user.email, this.userService);
     // Calculating difference in milliseconds
     const diff =
       createItemDto.end_time.getTime() - createItemDto.start_time.getTime();
@@ -72,12 +61,12 @@ export class ItemService {
     updateItemDto: UpdateItemDto,
     request: AuthenticatedRequest,
   ) {
-    await this.validateUser(request);
+    await verifyUser(request.user.userId, request.user.email, this.userService);
     return this.itemRequestRepository.save({ item_id: id, ...updateItemDto });
   }
 
   async delete(id: string, request: AuthenticatedRequest) {
-    await this.validateUser(request);
+    await verifyUser(request.user.userId, request.user.email, this.userService);
     return this.itemRequestRepository.delete({ item_id: id });
   }
 }
