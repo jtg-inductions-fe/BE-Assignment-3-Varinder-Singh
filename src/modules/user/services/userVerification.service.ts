@@ -1,7 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { Repository } from 'typeorm';
+
+import { USER_VERIFY } from '@constants/responseMessages.const';
 
 import { UserVerify } from '../../user/entities/userVerify.entity';
 import { UserVerifyType } from '../types/userVerify.types';
@@ -13,7 +15,7 @@ export class UserVerificationService {
     private userVerifyRepository: Repository<UserVerify>,
   ) {}
 
-  async findOne(uniqueString: string) {
+  async findOneByUniqueString(uniqueString: string) {
     return this.userVerifyRepository.findOne({
       where: {
         unique_string: uniqueString,
@@ -27,8 +29,13 @@ export class UserVerificationService {
   }
 
   async deleteOne(userVerifyId: string) {
-    return this.userVerifyRepository.delete({
+    const result = await this.userVerifyRepository.delete({
       user_verify_id: userVerifyId,
     });
+
+    if (!result.affected) {
+      throw new NotFoundException(USER_VERIFY.VERIFIED_ALREADY);
+    }
+    return result;
   }
 }

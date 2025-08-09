@@ -1,5 +1,8 @@
+import { BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+
+import { USER } from '@constants/responseMessages.const';
 
 import { User } from '../entities/user.entity';
 import { UserService } from '../services/user.service';
@@ -10,9 +13,9 @@ describe('UserService (unit)', () => {
 
   const mockUserRepository = {
     save: jest.fn(),
-    find: jest.fn(),
     findOneBy: jest.fn(),
     delete: jest.fn(),
+    update: jest.fn(),
   };
 
   const mockUser: UserType & { user_id: string } = {
@@ -34,6 +37,7 @@ describe('UserService (unit)', () => {
         },
       ],
     }).compile();
+
     service = module.get<UserService>(UserService);
   });
 
@@ -41,24 +45,28 @@ describe('UserService (unit)', () => {
     expect(service).toBeDefined();
   });
 
-  describe('findOne', () => {
+  describe('findOneByEmail', () => {
     it('should return user if found', async () => {
       mockUserRepository.findOneBy.mockResolvedValue(mockUser);
 
-      await expect(service.findOne(mockUser.email)).resolves.toBe(mockUser);
-
+      await expect(service.findOneByEmail(mockUser.email)).resolves.toEqual(
+        mockUser,
+      );
       expect(mockUserRepository.findOneBy).toHaveBeenCalledWith({
         email: mockUser.email,
       });
     });
+  });
 
-    it('should return null if user is not found', async () => {
-      mockUserRepository.findOneBy.mockResolvedValue(null);
+  describe('findOneById', () => {
+    it('should return user if found', async () => {
+      mockUserRepository.findOneBy.mockResolvedValue(mockUser);
 
-      await expect(service.findOne(mockUser.email)).resolves.toBe(null);
-
+      await expect(service.findOneById(mockUser.user_id)).resolves.toEqual(
+        mockUser,
+      );
       expect(mockUserRepository.findOneBy).toHaveBeenCalledWith({
-        email: mockUser.email,
+        user_id: mockUser.user_id,
       });
     });
   });
@@ -67,17 +75,65 @@ describe('UserService (unit)', () => {
     it('should return user if created successfully', async () => {
       mockUserRepository.save.mockResolvedValue(mockUser);
 
-      await expect(service.create(mockUser)).resolves.toBe(mockUser);
-
-      expect(mockUserRepository.save).toHaveBeenCalled();
+      await expect(service.create(mockUser)).resolves.toEqual(mockUser);
+      expect(mockUserRepository.save).toHaveBeenCalledWith(mockUser);
     });
   });
 
-  describe('update', () => {
+  describe('updateOne', () => {
     it('should return user if updated successfully', async () => {
-      mockUserRepository.save.mockResolvedValue(mockUser);
+      const updatedUser = { ...mockUser, name: 'Updated Name' };
 
-      await expect(service.create(mockUser)).resolves.toBe(mockUser);
+      mockUserRepository.update.mockResolvedValue({ affected: 1 });
+      mockUserRepository.findOneBy.mockResolvedValue(updatedUser);
+
+      const updateData = {
+        phone: '+919291947322',
+        address: 'block 10',
+      };
+
+      await expect(
+        service.updateOne(mockUser.user_id, updateData),
+      ).resolves.toEqual(updatedUser);
+
+      expect(mockUserRepository.update).toHaveBeenCalledWith(
+        { user_id: mockUser.user_id },
+        updateData,
+      );
+      expect(mockUserRepository.findOneBy).toHaveBeenCalledWith({
+        user_id: mockUser.user_id,
+      });
+    });
+
+    it('should throw BadRequestException if update fails', async () => {
+      mockUserRepository.update.mockResolvedValue({ affected: 0 });
+
+      await expect(
+        service.updateOne(mockUser.user_id, { name: 'test' }),
+      ).rejects.toThrow(new BadRequestException(USER.UPDATE_ERROR));
+    });
+  });
+
+  describe('delete', () => {
+    it('should return result if deleted successfully', async () => {
+      const deleteResult = { affected: 1 };
+      mockUserRepository.delete.mockResolvedValue(deleteResult);
+
+      await expect(service.delete(mockUser.user_id)).resolves.toEqual(
+        deleteResult,
+      );
+      expect(mockUserRepository.delete).toHaveBeenCalledWith({
+        user_id: mockUser.user_id,
+      });
+    });
+
+    it('should throw BadRequestException if no rows affected', async () => {
+      const deleteResult = { affected: 0 };
+      mockUserRepository.delete.mockResolvedValue(deleteResult);
+
+      await expect(service.delete(mockUser.user_id)).rejects.toThrow(
+        new BadRequestException(USER.DELETE_ERROR),
+      );
     });
   });
 });

@@ -1,7 +1,7 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
-  InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -10,6 +10,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 
 import * as bcrypt from 'bcrypt';
 
+import { USER, USER_VERIFY } from '@constants/responseMessages.const';
 import {
   mockJWTService,
   mockMailService,
@@ -46,6 +47,7 @@ describe('AuthService (unit)', () => {
     }).compile();
 
     service = module.get<AuthService>(AuthService);
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -54,22 +56,11 @@ describe('AuthService (unit)', () => {
 
   describe('signup', () => {
     it('should throw ConflictException if user already exists', async () => {
-      mockUserService.findOne.mockResolvedValue(mockUser);
+      mockUserService.create.mockRejectedValue(new ConflictException());
+      jest.spyOn(bcrypt, 'hash').mockImplementation(() => 'hashed-password');
 
       await expect(service.signup(mockSignupDto)).rejects.toThrow(
         ConflictException,
-      );
-
-      expect(mockUserService.findOne).toHaveBeenCalledWith(mockUser.email);
-    });
-
-    it('should throw InternalServerErrorException if user is not created', async () => {
-      mockUserService.findOne.mockResolvedValue(null);
-      jest.spyOn(bcrypt, 'hash').mockImplementation(() => 'hashed-password');
-      mockUserService.create.mockResolvedValue(null);
-
-      await expect(service.signup(mockSignupDto)).rejects.toThrow(
-        InternalServerErrorException,
       );
 
       expect(mockUserService.create).toHaveBeenCalledWith({
@@ -79,80 +70,197 @@ describe('AuthService (unit)', () => {
       });
     });
 
-    it('should throw InternalServerErrorException if user verification is not created', async () => {
-      mockUserService.findOne.mockResolvedValue(null);
-      mockUserService.create.mockResolvedValue(mockUser);
-      mockUserVerificationService.create.mockResolvedValue(null);
-
-      await expect(service.signup(mockSignupDto)).rejects.toThrow(
-        InternalServerErrorException,
-      );
-    });
-
     it('should return verify email message if user is created successfully', async () => {
-      mockUserService.findOne.mockResolvedValue(null);
+      jest.spyOn(bcrypt, 'hash').mockImplementation(() => 'hashed-password');
       mockUserService.create.mockResolvedValue(mockUser);
+      mockMailService.sendMail.mockResolvedValue(true);
       mockUserVerificationService.create.mockResolvedValue(mockUserVerify);
 
       await expect(service.signup(mockSignupDto)).resolves.toStrictEqual({
-        message:
-          'User registered successfully. Please verify your email to activate your account.',
+        message: USER.REGISTERED,
       });
 
+      expect(mockUserService.create).toHaveBeenCalledWith({
+        ...mockSignupDto,
+        password: 'hashed-password',
+        is_verified: false,
+      });
       expect(mockMailService.sendMail).toHaveBeenCalled();
+      expect(mockUserVerificationService.create).toHaveBeenCalled();
     });
   });
 
   describe('signin', () => {
     it("should throw NotFoundException if user doesn't exist", async () => {
-      mockUserService.findOne.mockResolvedValue(null);
+      mockUserService.findOneByEmail.mockResolvedValue(null);
+
       await expect(service.signin(mockSigninDto)).rejects.toThrow(
         NotFoundException,
       );
 
-      expect(mockUserService.findOne).toHaveBeenCalledWith(mockSigninDto.email);
+      expect(mockUserService.findOneByEmail).toHaveBeenCalledWith(
+        mockSigninDto.email,
+      );
+    });
+
+    it('should throw UnauthorizedException if password is not correct', async () => {
+      mockUserService.findOneByEmail.mockResolvedValue({
+        ...mockUser,
+        is_verified: true,
+      });
+
+      jest.spyOn(bcrypt, 'compare').mockImplementation(() => false);
+
+      await expect(service.signin(mockSigninDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
+
+      expect(mockUserService.findOneByEmail).toHaveBeenCalledWith(
+        mockSigninDto.email,
+      );
     });
 
     it('should throw ForbiddenException if user is not verified', async () => {
-      mockUserService.findOne.mockResolvedValue({
+      mockUserService.findOneByEmail.mockResolvedValue({
         ...mockUser,
         is_verified: false,
       });
+
+      jest.spyOn(bcrypt, 'compare').mockImplementation(() => true);
 
       await expect(service.signin(mockSigninDto)).rejects.toThrow(
         ForbiddenException,
       );
 
-      expect(mockUserService.findOne).toHaveBeenCalledWith(mockSigninDto.email);
-    });
-
-    it('should throw UnauthorizedException if password is not correct', async () => {
-      mockUserService.findOne.mockResolvedValue({
-        ...mockUser,
-        is_verified: true,
-      });
-
-      mockSigninDto.password = 'other-strong-password';
-      await expect(service.signin(mockSigninDto)).rejects.toThrow(
-        UnauthorizedException,
+      expect(mockUserService.findOneByEmail).toHaveBeenCalledWith(
+        mockSigninDto.email,
       );
-
-      expect(mockUserService.findOne).toHaveBeenCalledWith(mockSigninDto.email);
     });
 
     it('should sign in user successfully', async () => {
-      mockUserService.findOne.mockResolvedValue({
-        ...mockSigninDto,
+      const verifiedUser = {
+        ...mockUser,
         is_verified: true,
-      });
-      jest.spyOn(bcrypt, 'compare').mockImplementation(() => true);
+      };
 
+      mockUserService.findOneByEmail.mockResolvedValue(verifiedUser);
+      jest.spyOn(bcrypt, 'compare').mockImplementation(() => true);
       mockJWTService.signAsync.mockResolvedValue('jwt_token');
-      await expect(service.signin(mockSigninDto)).resolves.toHaveProperty(
-        'payload.user',
+
+      const result = await service.signin(mockSigninDto);
+
+      const expectedPayload = {
+        userId: verifiedUser.user_id,
+        name: verifiedUser.name,
+        email: verifiedUser.email,
+        role: verifiedUser.role,
+      };
+
+      expect(result).toEqual({
+        message: USER.LOGGED_IN,
+        payload: {
+          token: 'jwt_token',
+          user: expectedPayload,
+        },
+      });
+
+      expect(mockUserService.findOneByEmail).toHaveBeenCalledWith(
+        mockSigninDto.email,
+      );
+      expect(mockJWTService.signAsync).toHaveBeenCalledWith(expectedPayload);
+    });
+  });
+
+  describe('verifyUser', () => {
+    const uniqueString = 'test-unique-string';
+
+    it('should throw NotFoundException if user verification does not exist', async () => {
+      mockUserVerificationService.findOneByUniqueString.mockResolvedValue(null);
+
+      await expect(service.verifyUser(uniqueString)).rejects.toThrow(
+        NotFoundException,
       );
 
-      expect(mockUserService.findOne).toHaveBeenCalledWith(mockSigninDto.email);
+      expect(
+        mockUserVerificationService.findOneByUniqueString,
+      ).toHaveBeenCalledWith(uniqueString);
+    });
+
+    it('should throw ConflictException if user is already verified', async () => {
+      const mockUserVerifyData = {
+        ...mockUserVerify,
+        user: {
+          ...mockUser,
+          is_verified: true,
+        },
+      };
+
+      mockUserVerificationService.findOneByUniqueString.mockResolvedValue(
+        mockUserVerifyData,
+      );
+
+      await expect(service.verifyUser(uniqueString)).rejects.toThrow(
+        ConflictException,
+      );
+    });
+
+    it('should throw BadRequestException if token is expired and create new verification', async () => {
+      const expiredDate = new Date(Date.now() - 1000); // Past date
+      const mockUserVerifyData = {
+        ...mockUserVerify,
+        user: {
+          ...mockUser,
+          is_verified: false,
+        },
+        expiring_at: expiredDate,
+      };
+
+      mockUserVerificationService.findOneByUniqueString.mockResolvedValue(
+        mockUserVerifyData,
+      );
+      mockUserVerificationService.deleteOne.mockResolvedValue(true);
+      mockMailService.sendMail.mockResolvedValue(true);
+      mockUserVerificationService.create.mockResolvedValue(mockUserVerify);
+
+      await expect(service.verifyUser(uniqueString)).rejects.toThrow(
+        BadRequestException,
+      );
+
+      expect(mockUserVerificationService.deleteOne).toHaveBeenCalled();
+      expect(mockMailService.sendMail).toHaveBeenCalled();
+      expect(mockUserVerificationService.create).toHaveBeenCalled();
+    });
+
+    it('should verify user successfully', async () => {
+      const futureDate = new Date(Date.now() + 3600000);
+      const mockUserVerifyData = {
+        ...mockUserVerify,
+        user: {
+          ...mockUser,
+          is_verified: false,
+        },
+        expiring_at: futureDate,
+      };
+
+      mockUserVerificationService.findOneByUniqueString.mockResolvedValue(
+        mockUserVerifyData,
+      );
+      mockUserVerificationService.deleteOne.mockResolvedValue(true);
+
+      const result = await service.verifyUser(uniqueString);
+
+      expect(result).toEqual({
+        message: USER_VERIFY.VERIFIED,
+      });
+
+      expect(
+        mockUserVerificationService.findOneByUniqueString,
+      ).toHaveBeenCalledWith(uniqueString);
+      expect(mockUserVerificationService.deleteOne).toHaveBeenCalledWith(
+        mockUserVerify.user_verify_id,
+      );
+
+      expect(mockUserVerifyData.user.is_verified).toBe(true);
     });
   });
 

@@ -5,9 +5,10 @@ import * as request from 'supertest';
 import { App } from 'supertest/types';
 import { Repository } from 'typeorm';
 
+import { USER } from '@constants/responseMessages.const';
 import { TestUser } from '@modules/auth/test/entities/testUser.entity';
 import { TestUserVerify } from '@modules/auth/test/entities/testUserVerify.entity';
-import { createTestModule } from '@utils/createTestModule.utils';
+import { createTestModule } from '@modules/user/test/createTestModule.utils';
 
 import { UserType } from '../types/user.types';
 
@@ -21,18 +22,18 @@ const user: UserType & { user_id: string } = {
 };
 
 describe('UserController (integration)', () => {
-  let app: INestApplication<App>;
+  let appModule: INestApplication<App>;
   let userRepository: Repository<TestUser>;
   let userVerifyRepository: Repository<TestUserVerify>;
 
   beforeAll(async () => {
-    const moduleRef = await createTestModule();
-    app = moduleRef.createNestApplication();
+    const { app, module } = await createTestModule();
     app.useGlobalPipes(new ValidationPipe());
     await app.init();
 
-    userRepository = moduleRef.get(getRepositoryToken(TestUser));
-    userVerifyRepository = moduleRef.get(getRepositoryToken(TestUserVerify));
+    appModule = app;
+    userRepository = module.get(getRepositoryToken(TestUser));
+    userVerifyRepository = module.get(getRepositoryToken(TestUserVerify));
   });
 
   beforeEach(async () => {
@@ -40,63 +41,63 @@ describe('UserController (integration)', () => {
       'TRUNCATE TABLE test_user_verify CASCADE;',
     );
     await userRepository.query('TRUNCATE TABLE test_user CASCADE;');
-
     jest.clearAllMocks();
   });
 
-  describe('findOne', () => {
-    it('/GET /user/:email should return user if exists', async () => {
+  describe('GET /user/:email', () => {
+    it('should return 200 with user data if user exists', async () => {
       await userRepository.save({ ...user, is_verified: true });
 
-      await request(app.getHttpServer())
+      const res = await request(appModule.getHttpServer())
         .get(`/user/${user.email}`)
-        .expect({ ...user, is_verified: true });
-    });
+        .expect(200);
 
-    it("/GET /user/:email should return null if user doesn't exist", async () => {
-      await request(app.getHttpServer()).get(`/user/${user.email}`).expect({});
+      expect(res.body).toMatchObject({ ...user, is_verified: true });
     });
   });
 
-  describe('updateOne', () => {
-    it('/PATCH /user/:userId should update a user and return the result', async () => {
+  describe('PATCH /user/:userId', () => {
+    it('should update the user and return updated user', async () => {
       await userRepository.save({ ...user, is_verified: true });
 
-      const updatedUser = {
-        user_id: user.user_id,
-        name: 'Updated Name',
+      const updatedUserData = {
+        phone: '12345678901',
+        address: 'Updated Address',
       };
 
-      await request(app.getHttpServer())
+      const res = await request(appModule.getHttpServer())
         .patch(`/user/${user.user_id}`)
-        .send({ name: 'Updated Name' })
-        .expect(updatedUser);
+        .send(updatedUserData)
+        .expect(200);
+
+      expect(res.body).toMatchObject({
+        message: USER.UPDATED,
+      });
     });
   });
 
-  describe('delete', () => {
-    it('/DELETE /user/:userId should return affected rows = 1 if user is deleted', async () => {
+  describe('DELETE /user/:userId', () => {
+    it('should return affected = 1 if user is deleted', async () => {
       await userRepository.save({ ...user, is_verified: true });
 
-      const result = {
+      const res = await request(appModule.getHttpServer())
+        .delete(`/user/${user.user_id}`)
+        .expect(200);
+
+      expect(res.body).toEqual({
         raw: [],
         affected: 1,
-      };
-
-      await request(app.getHttpServer())
-        .delete(`/user/${user.user_id}`)
-        .expect(result);
+      });
     });
 
-    it('/DELETE /user/:userId should return affected rows = 0 if no user is deleted', async () => {
-      const result = {
-        raw: [],
-        affected: 0,
-      };
-
-      await request(app.getHttpServer())
+    it('should return 400 if no user is deleted', async () => {
+      const res = await request(appModule.getHttpServer())
         .delete(`/user/${user.user_id}`)
-        .expect(result);
+        .expect(400);
+
+      expect((res.body as { message: string }).message).toMatch(
+        USER.DELETE_ERROR,
+      );
     });
   });
 
@@ -105,7 +106,6 @@ describe('UserController (integration)', () => {
       'TRUNCATE TABLE test_user_verify CASCADE;',
     );
     await userRepository.query('TRUNCATE TABLE test_user CASCADE;');
-
-    await app.close();
+    await appModule.close();
   });
 });

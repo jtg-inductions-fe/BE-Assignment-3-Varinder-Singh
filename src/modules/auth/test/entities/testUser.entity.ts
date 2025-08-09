@@ -8,7 +8,7 @@ export class TestUser {
   @Column()
   name: string;
 
-  @Column()
+  @Column({ unique: true })
   email: string;
 
   @Column()
@@ -16,6 +16,12 @@ export class TestUser {
 
   @Column()
   role: 'admin' | 'seller' | 'buyer';
+
+  @Column({ type: 'bigint', nullable: true })
+  phone?: string;
+
+  @Column({ nullable: true })
+  address?: string;
 
   @Column()
   is_verified: boolean;

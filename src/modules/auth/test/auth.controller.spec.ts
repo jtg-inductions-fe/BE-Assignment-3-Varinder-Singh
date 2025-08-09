@@ -5,10 +5,11 @@ import * as request from 'supertest';
 import { App } from 'supertest/types';
 import { Repository } from 'typeorm';
 
+import { USER, USER_VERIFY } from '@constants/responseMessages.const';
 import { UserService } from '@modules/user/services/user.service';
 import { UserVerificationService } from '@modules/user/services/userVerification.service';
+import { createTestModule } from '@modules/user/test/createTestModule.utils';
 import { UserType } from '@modules/user/types/user.types';
-import { createTestModule } from '@utils/createTestModule.utils';
 
 import { TestUser } from './entities/testUser.entity';
 import { TestUserVerify } from './entities/testUserVerify.entity';
@@ -23,22 +24,22 @@ const user: UserType & { user_id: string } = {
 };
 
 describe('AuthController (integration)', () => {
-  let app: INestApplication<App>;
+  let appModule: INestApplication<App>;
   let userService: UserService;
   let userVerificationService: UserVerificationService;
   let userRepository: Repository<TestUser>;
   let userVerifyRepository: Repository<TestUserVerify>;
 
   beforeAll(async () => {
-    const moduleRef = await createTestModule();
-    app = moduleRef.createNestApplication();
+    const { app, module } = await createTestModule();
     app.useGlobalPipes(new ValidationPipe());
     await app.init();
 
-    userService = moduleRef.get(UserService);
-    userVerificationService = moduleRef.get(UserVerificationService);
-    userRepository = moduleRef.get(getRepositoryToken(TestUser));
-    userVerifyRepository = moduleRef.get(getRepositoryToken(TestUserVerify));
+    appModule = app;
+    userService = module.get(UserService);
+    userVerificationService = module.get(UserVerificationService);
+    userRepository = module.get(getRepositoryToken(TestUser));
+    userVerifyRepository = module.get(getRepositoryToken(TestUserVerify));
   });
 
   beforeEach(async () => {
@@ -51,36 +52,56 @@ describe('AuthController (integration)', () => {
   });
 
   it('should be defined', () => {
-    expect(app).toBeDefined();
+    expect(appModule).toBeDefined();
     expect(userService).toBeDefined();
     expect(userVerificationService).toBeDefined();
   });
 
   describe('signup', () => {
     it('/POST /signup should create a user and send verification email', async () => {
-      const res = await request(app.getHttpServer())
+      const res = await request(appModule.getHttpServer())
         .post('/signup')
         .send(user)
         .expect(201);
 
-      expect(res.body).toHaveProperty(
-        'message',
-        'User registered successfully. Please verify your email to activate your account.',
-      );
+      expect(res.body).toHaveProperty('message', USER.REGISTERED);
 
-      const createdUser = await userService.findOne(user.email);
+      const createdUser = await userService.findOneByEmail(user.email);
       expect(createdUser).toBeDefined();
       expect(createdUser?.email).toBe(user.email);
       expect(createdUser?.name).toBe(user.name);
       expect(createdUser?.role).toBe(user.role);
+      expect(createdUser?.is_verified).toBe(false);
+
+      const verification = await userVerifyRepository.findOne({
+        where: {
+          user: { user_id: createdUser?.user_id },
+        },
+      });
+      expect(verification).toBeDefined();
+      expect(verification?.unique_string).toBeDefined();
+    });
+
+    it('/POST /signup should return 409 if user already exists', async () => {
+      await request(appModule.getHttpServer())
+        .post('/signup')
+        .send(user)
+        .expect(201);
+      await request(appModule.getHttpServer())
+        .post('/signup')
+        .send(user)
+        .expect(409);
     });
   });
 
   describe('verify user', () => {
     it('/GET /verify/:uniqueString should verify the user', async () => {
-      await request(app.getHttpServer()).post('/signup').send(user).expect(201);
+      await request(appModule.getHttpServer())
+        .post('/signup')
+        .send(user)
+        .expect(201);
 
-      const dbUser = await userService.findOne(user.email);
+      const dbUser = await userService.findOneByEmail(user.email);
 
       if (!dbUser) throw new Error('Db user is not defined');
 
@@ -91,44 +112,101 @@ describe('AuthController (integration)', () => {
       });
       expect(verification).toBeDefined();
 
-      const res = await request(app.getHttpServer())
+      const res = await request(appModule.getHttpServer())
         .get(`/verify/${verification?.unique_string}`)
         .expect(200);
 
-      expect(res.body).toHaveProperty('message', 'User verified successfully');
+      expect(res.body).toHaveProperty('message', USER_VERIFY.VERIFIED);
 
-      const verifiedUser = await userService.findOne(user.email);
+      const verifiedUser = await userService.findOneByEmail(user.email);
       expect(verifiedUser?.is_verified).toBe(true);
+
+      const deletedVerification = await userVerifyRepository.findOne({
+        where: {
+          user: { user_id: dbUser.user_id },
+        },
+      });
+      expect(deletedVerification).toBeNull();
+    });
+
+    it('/GET /verify/:uniqueString should return 404 for invalid token', async () => {
+      await request(appModule.getHttpServer())
+        .get('/verify/invalid-unique-string')
+        .expect(404);
+    });
+
+    it('/GET /verify/:uniqueString should return 409 if user already verified', async () => {
+      await request(appModule.getHttpServer())
+        .post('/signup')
+        .send(user)
+        .expect(201);
+      await userRepository.update({ email: user.email }, { is_verified: true });
+
+      const dbUser = await userService.findOneByEmail(user.email);
+      const verification = await userVerifyRepository.findOne({
+        where: {
+          user: { user_id: dbUser?.user_id },
+        },
+      });
+
+      await request(appModule.getHttpServer())
+        .get(`/verify/${verification?.unique_string}`)
+        .expect(409);
     });
   });
 
   describe('signin', () => {
     it('/POST /signin should return token and success message if credentials are valid', async () => {
-      await request(app.getHttpServer()).post('/signup').send(user).expect(201);
-
+      await request(appModule.getHttpServer())
+        .post('/signup')
+        .send(user)
+        .expect(201);
       await userRepository.update({ email: user.email }, { is_verified: true });
 
-      await request(app.getHttpServer())
+      await request(appModule.getHttpServer())
         .post('/signin')
-        .send({
-          email: user.email,
-          password: user.password,
-        })
+        .send({ email: user.email, password: user.password })
         .expect(201);
     });
 
     it("/POST /signin should throw UnauthorizedException if password doesn't match", async () => {
-      await request(app.getHttpServer()).post('/signup').send(user).expect(201);
-
+      await request(appModule.getHttpServer())
+        .post('/signup')
+        .send(user)
+        .expect(201);
       await userRepository.update({ email: user.email }, { is_verified: true });
 
-      await request(app.getHttpServer())
+      await request(appModule.getHttpServer())
         .post('/signin')
         .send({
           email: user.email,
           password: 'wrong-password',
         })
         .expect(401);
+    });
+
+    it('/POST /signin should throw NotFoundException if user does not exist', async () => {
+      await request(appModule.getHttpServer())
+        .post('/signin')
+        .send({
+          email: 'nonexistent@example.com',
+          password: 'Test@1234',
+        })
+        .expect(404);
+    });
+
+    it('/POST /signin should throw ForbiddenException if user is not verified', async () => {
+      await request(appModule.getHttpServer())
+        .post('/signup')
+        .send(user)
+        .expect(201);
+      await request(appModule.getHttpServer())
+        .post('/signin')
+        .send({
+          email: user.email,
+          password: user.password,
+        })
+        .expect(403);
     });
   });
 
@@ -138,6 +216,6 @@ describe('AuthController (integration)', () => {
     );
     await userRepository.query('TRUNCATE TABLE test_user CASCADE;');
 
-    await app.close();
+    await appModule.close();
   });
 });

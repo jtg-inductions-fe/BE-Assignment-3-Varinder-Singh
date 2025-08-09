@@ -1,7 +1,3 @@
-export interface UserType {
-  name: string;
-  email: string;
-  password: string;
-  role: 'admin' | 'seller' | 'buyer';
-  is_verified: boolean;
-}
+import { User } from '../entities/user.entity';
+
+export type UserType = Omit<User, 'user_id'>;

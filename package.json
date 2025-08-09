@@ -91,10 +91,11 @@
       "^@modules/(.*)$": "<rootDir>/modules/$1",
       "^@utils/(.*)$": "<rootDir>/utils/$1",
       "^@mock/(.*)$": "<rootDir>/mock/$1",
-      "^@app-types$": "<rootDir>/types"
+      "^@app-types/(.*)$": "<rootDir>/types$1",
+      "^@test/(.*)$": "<rootDir>/../test/$1"
     }
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=20.0.0"
   }
 }

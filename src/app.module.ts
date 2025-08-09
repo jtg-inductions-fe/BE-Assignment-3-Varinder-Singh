@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 
 import { AuthModule } from '@modules/auth/auth.module';
@@ -24,6 +25,15 @@ import { AppService } from './app.service';
         database: cfg.get<string>('DB_NAME'),
         synchronize: true,
         autoLoadEntities: true,
+      }),
+    }),
+    JwtModule.registerAsync({
+      global: true,
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (cfg: ConfigService) => ({
+        secret: cfg.get<string>('JWT_SECRET'),
+        expiresIn: '24h',
       }),
     }),
     AuthModule,

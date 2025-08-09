@@ -1,7 +1,17 @@
-import { Body, Controller, Delete, Get, Param, Patch } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+} from '@nestjs/common';
 
+import { USER } from '@constants/responseMessages.const';
+
+import { updateDto } from './dto/update.dto';
 import { UserService } from './services/user.service';
-import { UserType } from './types/user.types';
 
 @Controller('user')
 export class UserController {
@@ -9,18 +19,21 @@ export class UserController {
 
   @Get('/:email')
   async findOne(@Param('email') email: string) {
-    return this.userService.findOne(email);
+    return this.userService.findOneByEmail(email);
   }
 
   @Patch('/:userId')
   async update(
     @Param('userId') userId: string,
     @Body()
-    updateBody: Partial<
-      UserType & { user_id: string; phone: string; address: string }
-    >,
+    updateBody: updateDto,
   ) {
-    return this.userService.updateOne({ user_id: userId, ...updateBody });
+    const user = await this.userService.updateOne(userId, updateBody);
+    if (user) {
+      return { message: USER.UPDATED };
+    } else {
+      throw new BadRequestException(USER.UPDATE_ERROR);
+    }
   }
 
   @Delete('/:userId')

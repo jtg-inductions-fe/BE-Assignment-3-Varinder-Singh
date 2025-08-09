@@ -1,5 +1,9 @@
+import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+
+import { USER_VERIFY } from '@constants/responseMessages.const';
+import { mockUser } from '@mock/auth.mock';
 
 import { UserVerify } from '../entities/userVerify.entity';
 import { UserVerificationService } from '../services/userVerification.service';
@@ -9,16 +13,15 @@ describe('UserVerificationService (unit)', () => {
 
   const mockUserVerifyRepository = {
     save: jest.fn(),
-    find: jest.fn(),
     findOne: jest.fn(),
     delete: jest.fn(),
   };
 
   const mockUserVerify = {
     user_verify_id: 'user_verify_id',
-    user_id: '31be7a70-2c19-49f7-a359-cde3dbfafe58',
     unique_string: 'unique_string',
-    expiring_at: new Date(),
+    expiring_at: new Date('2025-08-08T18:41:51.821Z'),
+    user: mockUser,
   };
 
   beforeEach(async () => {
@@ -31,77 +34,84 @@ describe('UserVerificationService (unit)', () => {
         },
       ],
     }).compile();
+
     service = module.get<UserVerificationService>(UserVerificationService);
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
 
-  describe('findOne', () => {
+  describe('findOneByUniqueString', () => {
     it('should return user verification if found', async () => {
       mockUserVerifyRepository.findOne.mockResolvedValue(mockUserVerify);
 
-      await expect(service.findOne('unique_string')).resolves.toBe(
-        mockUserVerify,
-      );
+      await expect(
+        service.findOneByUniqueString('unique_string'),
+      ).resolves.toEqual(mockUserVerify);
 
-      expect(mockUserVerifyRepository.findOne).toHaveBeenCalled();
+      expect(mockUserVerifyRepository.findOne).toHaveBeenCalledWith({
+        where: { unique_string: 'unique_string' },
+        relations: ['user'],
+      });
     });
 
     it('should return null if user verification is not found', async () => {
       mockUserVerifyRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.findOne('unique_string')).resolves.toBe(null);
+      await expect(
+        service.findOneByUniqueString('nonexistent'),
+      ).resolves.toBeNull();
 
-      expect(mockUserVerifyRepository.findOne).toHaveBeenCalled();
+      expect(mockUserVerifyRepository.findOne).toHaveBeenCalledWith({
+        where: { unique_string: 'nonexistent' },
+        relations: ['user'],
+      });
     });
   });
+
   describe('create', () => {
-    it('should return user verification if created successfully', async () => {
+    it('should return created user verification', async () => {
+      const input = {
+        user: mockUserVerify.user,
+        unique_string: mockUserVerify.unique_string,
+        expiring_at: mockUserVerify.expiring_at,
+      };
+
       mockUserVerifyRepository.save.mockResolvedValue(mockUserVerify);
 
-      await expect(
-        service.create({
-          ...mockUserVerify,
-          user: {
-            name: 'varinder',
-            email: 'varinder@gmail.com',
-            password: '1234',
-            role: 'admin',
-            is_verified: false,
-          },
-        }),
-      ).resolves.toBe(mockUserVerify);
+      const result = await service.create(input);
+
+      expect(result).toEqual(mockUserVerify);
+      expect(mockUserVerifyRepository.save).toHaveBeenCalledWith(input);
     });
   });
 
   describe('deleteOne', () => {
-    it('should return affected rows 1 if user is deleted', async () => {
-      mockUserVerifyRepository.delete.mockResolvedValue({
-        raw: {},
-        affected: 1,
-      });
+    it('should return affected = 1 if user verification is deleted', async () => {
+      const deleteResult = { raw: {}, affected: 1 };
+      mockUserVerifyRepository.delete.mockResolvedValue(deleteResult);
 
       await expect(
         service.deleteOne(mockUserVerify.user_verify_id),
-      ).resolves.toStrictEqual({
-        raw: {},
-        affected: 1,
+      ).resolves.toEqual(deleteResult);
+
+      expect(mockUserVerifyRepository.delete).toHaveBeenCalledWith({
+        user_verify_id: mockUserVerify.user_verify_id,
       });
     });
 
-    it('should return affected rows 0 if user is not deleted', async () => {
-      mockUserVerifyRepository.delete.mockResolvedValue({
-        raw: {},
-        affected: 0,
-      });
+    it('should throw NotFoundException if nothing was deleted', async () => {
+      const deleteResult = { raw: {}, affected: 0 };
+      mockUserVerifyRepository.delete.mockResolvedValue(deleteResult);
 
       await expect(
         service.deleteOne(mockUserVerify.user_verify_id),
-      ).resolves.toStrictEqual({
-        raw: {},
-        affected: 0,
+      ).rejects.toThrow(new NotFoundException(USER_VERIFY.VERIFIED_ALREADY));
+
+      expect(mockUserVerifyRepository.delete).toHaveBeenCalledWith({
+        user_verify_id: mockUserVerify.user_verify_id,
       });
     });
   });
